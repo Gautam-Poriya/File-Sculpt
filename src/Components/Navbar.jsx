@@ -39,12 +39,12 @@ const Navbar = () => {
            </select> */}
 
           {/* </div> */}
-          {/* <div className="ml-16">
+          <div className="ml-16">
             <CreateAndManageOrganization />
           </div>
           <div className="ml-16">
             <CreateAndManageProject />
-          </div> */}
+          </div>
           {/* <div className="ml-40 w-20 ">
             <UserProfile />
           </div> */}
@@ -66,11 +66,11 @@ const CreateAndManageOrganization = () => {
 
   const [newOrganization, setNewOrganization] = useState("");
 
-  const [organizations, setOrganizations] = useState([
-    { id: 1, name: "Org 1" },
-    { id: 2, name: "Org 2" },
-    { id: 3, name: "Org 3" },
-  ]);
+  // const [organizations, setOrganizations] = useState([
+  //   { id: 1, name: "Org 1" },
+  //   { id: 2, name: "Org 2" },
+  //   { id: 3, name: "Org 3" },
+  // ]);
 
   const [mainButtonLabel, setMainButtonLabel] = useState("Test-Org");
   const modalRef = useRef(null); // Reference for the modal content

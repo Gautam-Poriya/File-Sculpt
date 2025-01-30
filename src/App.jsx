@@ -19,12 +19,13 @@ import ParsedResult from "./Components/ParsedResult.jsx"
 function App() {
   return (
    
-   
+   <AuthProvider>
       <Router>
         <Routes>
           
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<SignIn />} />
+          <Route element={<PrivateRoute />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/parse" element={<Parse />} />
           <Route path="/parse-result" element={<ParsedResult />}/>
           <Route path="/settings" element={<Settings />} />
@@ -37,6 +38,7 @@ function App() {
           <Route path="/uuid/waitlist-form" element={<SignUpForWaitList/>} />
         </Routes>
       </Router>
+      </AuthProvider>
       
   )
 }
