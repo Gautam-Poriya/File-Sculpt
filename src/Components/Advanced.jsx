@@ -12,7 +12,7 @@ const Advanced = () => {
       <>
         <div className="ml-5 ">
           <button onClick={handleAdvancedButton} className="flex items-center">
-            <span className="inline-block hover:border-b-2 hover:border-black">
+            <span className="inline-block hover:border-b-2 hover:border-black font-semibold">
               Advanced
             </span>{" "}
             <svg

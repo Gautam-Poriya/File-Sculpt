@@ -10,7 +10,7 @@ const PageSpecification = () => {
     <>
       <div className="ml-5 ">
         <button onClick={handlePageSpecification} className="flex items-center">
-          <span className="inline-block hover:border-b-2 hover:border-black">
+          <span className="inline-block hover:border-b-2 hover:border-black font-semibold">
             Page Specification
           </span>
           <svg
@@ -23,8 +23,8 @@ const PageSpecification = () => {
         </button>
       </div>
       {isPageSpecificationOpen && (
-        <div className="ml-9">
-          <div className="flex">
+        <div className="ml-9 ">
+          <div className="flex gap-1">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 576 512"
@@ -46,7 +46,7 @@ const PageSpecification = () => {
             className="w-40 h-8 rounded-md border border-spacing-1 mt-2 p-3"
             placeholder="1,23,45"
           />
-          <div className="flex ">
+          <div className="flex gap-1">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 576 512"

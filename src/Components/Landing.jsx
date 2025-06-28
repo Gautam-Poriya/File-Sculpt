@@ -7,13 +7,13 @@ const Landing = () => {
   }
   return (
     <> 
-    <article className="h-screen w-4/5 " >
+    <article className="h-screen w-4/5  " >
       <div className="items-center justify-center mt-32 flex">
         <div>
-          <h4 className="text-4xl font-bold">LLamaCloud</h4>
+          <h4 className="text-4xl font-bold">FileSculpt</h4>
           
           <p className="mt-1">
-            LLamaCloud is an AI infrastructure platform that helps you spend <br/>
+            FileSculpt is an AI infrastructure platform that helps you spend <br/>
             less time managing infra & tuning parameters, and focus on your AI<br/>
             product.
           </p>

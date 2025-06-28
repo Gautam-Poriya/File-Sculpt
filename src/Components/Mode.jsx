@@ -1,9 +1,13 @@
 import React from "react";
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import {useAppContext}   from './AppContext';  // Import the context
+
 // pages parsing filter
 const Mode = () => {
-  const [selectedOption, setSelectedOption] = useState("");
+ // const [selectedOption, setSelectedOption] = useState("Accurate");
+ const { selectedOption, setSelectedOption } = useAppContext(); // Access context state
+
   const handleOptionChange = (e) => {
     setSelectedOption(e.target.value);
   };

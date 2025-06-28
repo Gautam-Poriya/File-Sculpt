@@ -1,5 +1,5 @@
 import React from "react";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar.jsx";
 import Services from "./Aside/Services.jsx";
@@ -13,6 +13,10 @@ import SignUpForWaitList from "./SignUpForWaitList.jsx";
 import ToggleButton from "./ToggleButton.jsx";
 import WebHook from "./WebHook.jsx";
 import * as pdfjs from "pdfjs-dist";
+import axios from "axios";
+import { useAppContext } from "./AppContext"; // Import the context
+// import ReactJson from "react-json-view-lite";
+
 const Parse = () => {
   return (
     <>
@@ -27,17 +31,33 @@ const Parse = () => {
 export default Parse;
 
 const ParseService = () => {
+  const { selectedOption } = useAppContext(); // Access context state
+  const { mainButtonLabel } = useAppContext();
+  const { userData } = useAppContext();
+  const { currentUser } = useAppContext();
   const [step, setStep] = useState(1);
   const [setFile, setSetFile] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [pageCount, setPageCount] = useState(null);
+  const [parsedContent, setParsedContent] = useState(null);
+  const [jsonContent, setJsonContent] = useState(" ");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
   const navigate = useNavigate();
+  useEffect(() => {
+    if (loading) {
+      setMessage("Please wait, we are parsing the Job...");
+    }
+  }, [loading]);
   function handleDocumentation() {
     window.location.href = "https://docs.cloud.llamaindex.ai/";
   }
   function handleSendboxButton() {
     navigate("/parse");
   }
+  // function navigateToGitHub(){
+  //   navigate("https://github.com/Gautam-Poriya/Document-Parsing/issues")
+  // }
   function handleHistoryButton() {
     navigate("/parse/history");
   }
@@ -63,10 +83,14 @@ const ParseService = () => {
   // Handle close button in JobResult component
   const handleCloseJobResult = () => {
     setStep(1);
-    
+
     // Go back to FileUpload component
   };
-  function handleParsingOnClickButton() {
+  
+  const handleParsingOnClickButton = async () => {
+    //loading
+    setLoading(true);
+    setMessage("Please wait, we are parsing the Job...");
     //    navigate('/parse-result')
     if (selectedFile !== null) {
       // frontend to backend request goes here
@@ -74,13 +98,52 @@ const ParseService = () => {
       setStep("2");
 
       // Simulating a delay for processing
+    //  if(response!==NULL){
+    //   setStep("3");
+    //  }else{
+    //   alert("Plese Try Again ")
+    //  }
+
       setTimeout(() => {
         setStep("3");
-      }, 5000);
+      }, 10000);
     } else {
       alert("Please Choose Your File First");
     }
-  }
+
+    // handling parse
+    const token = localStorage.getItem("jwt"); // Get JWT from localStorage
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+    formData.append("parseMode", selectedOption);
+    formData.append("Organization", mainButtonLabel);
+    formData.append("userEmail", userData);
+    formData.append("currentUser", currentUser);
+    formData.append("token", token);
+    console.log(formData);
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/parse-pdf",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log("front end recieve final data:", response);
+      // jsonContent=JSON.parse(response.data)
+      setParsedContent(response.data);
+      console.log("type of result",typeof response.data);
+      console.log("parsed content backend mathi aayvo:", response);
+      // setJsonContent(JSON.parse(response.data.file.json));
+    } catch (error) {
+      console.error("Error during file parsing:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -94,7 +157,7 @@ const ParseService = () => {
             >
               <path d="M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zm88 64l0 64-88 0 0-64 88 0zm56 0l88 0 0 64-88 0 0-64zm240 0l0 64-88 0 0-64 88 0zM64 224l88 0 0 64-88 0 0-64zm232 0l0 64-88 0 0-64 88 0zm64 0l88 0 0 64-88 0 0-64zM152 352l0 64-88 0 0-64 88 0zm56 0l88 0 0 64-88 0 0-64zm240 0l0 64-88 0 0-64 88 0z" />
             </svg>
-            <h5 className="font-bold text-xl">LlamaParse</h5>
+            <h5 className="font-bold text-xl">FileSculpt</h5>
           </div>
           <p>Analyze documents, tailored for optimal performance with RAG.</p>
         </div>
@@ -113,14 +176,17 @@ const ParseService = () => {
             History
           </button>
 
-          <button
+          {/* <button
             className="ml-80 border-zinc-400   border w-40 rounded-md h-10 hover:bg-black hover:text-white"
             onClick={handleDocumentation}
           >
             Documentation
-          </button>
-          <button className="ml-4 border-zinc-400   border w-48 rounded-md h-10 hover:bg-black hover:text-white ">
+          </button> */}
+          <button className="ml-[500px] border-zinc-400   border w-48 rounded-md h-10 hover:bg-black hover:text-white" >
+             <a href="https://github.com/Gautam-Poriya/Document-Parsing/issues" target="_blank" className="w-full h-full">
+               
             Report issue on Github
+              </a>
           </button>
         </div>
 
@@ -135,9 +201,10 @@ const ParseService = () => {
                     Parse Settings
                   </h5>
                   <br />
-                  <div className="ml-3">Mode</div>
+                  <div className="ml-3 font-bold">Mode</div>
                   <div>
                     <Mode />
+                    {console.log("Mode ni Niche:", selectedOption)}
                   </div>
                   {/* <div className=" flex items-center">
                   <p className="flex ml-3 mt-1 gap-2">
@@ -212,11 +279,19 @@ const ParseService = () => {
               )}
               {step == 2 && (
                 <>
-                  <FileUpLoading />
+                  <FileUpLoading message={message} />
                   {/* <button onClick={handleParse}>Parse</button> */}
                 </>
               )}
-              {step == 3 && <ParsedFileResult onClose={handleCloseJobResult} />}
+              {step == 3 && (
+                <ParsedFileResult
+                  onClose={handleCloseJobResult}
+                  parsedContent={parsedContent}
+                  setParsedContent={setParsedContent}
+                  // job_id={parsedContent.job_id}
+                  jsonContent={jsonContent}
+                />
+              )}
             </div>
           </div>
           {/* </div> */}
@@ -236,7 +311,6 @@ const FileUpload = ({ selectedFile, setSelectedFile }) => {
     // alert("somone click cancel button")
     setCancelButtonClick(!cancelButtonClick);
     setSelectedFile(!selectedFile);
-    
   }
   return (
     <div className="w-full min-h-[200px] h-fit border border-slate-300 rounded-2xl ml-1 mt-1 mb-1 mr-5 relative ">
@@ -303,15 +377,140 @@ const FileUpload = ({ selectedFile, setSelectedFile }) => {
   );
 };
 
-const FileUpLoading = () => {
-  return <div>Loadding.... please wait eandom time</div>;
+const FileUpLoading = ({ message }) => {
+  return (
+    <>
+    {/* <div className=" w-full h-full justify-center-items items-center flex">
+
+    <div>{message}</div>
+    </div> */}
+     <div className="w-full min-h-[200px] h-fit border border-slate-300 rounded-2xl ml-1 mt-1 mb-1 mr-5 relative ">
+      {/* <div className="w-full h-72 border border-slate-300 rounded-2xl ml-1 mt-1 mb-1 mr-5"> */}
+      <div className="h-64 mt-1 ml-1 mr-1 mb-3 flex rounded-xl  border-dashed border-gray-400 border-2 overflow-hidden justify-center items-center relative ">
+       {message}
+      </div>
+    </div>
+    </>
+  )
+  
+  
 };
 
-const ParsedFileResult = ({ onClose }) => {
+const ParsedFileResult = ({
+  onClose,
+  parsedContent,
+  setParsedContent,
+  job_id,
+  jsonContent,
+}) => {
+  
+  const [markDownIsOpen, setMarkDownIsOpen] = useState(null);
+  const [textIsOpen, setTextIsOpen] = useState(null);
+  const [jsonIsOpen, setJsonIsOpen] = useState(null);
+  const [xlsxIsOpen, setXlsxIsOpen] = useState(null);
+  const [imagesIsOpen,setImagesIsOpen]=useState(null);
+   const [layoutIsOpen,setLayoutIsOpen]=useState(null);
+    const [structuredIsOpen,setStructuredIsOpen]=useState(null);
+
+
+  const JsonDisplay = ({ jsonContent }) => {
+    // Check if jsonContent is an object
+    const isObject = (obj) =>
+      obj && typeof obj === "object" && !Array.isArray(obj);
+
+    return (
+      <div className="json-display">
+        {jsonContent ? (
+          <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap">
+            {isObject(jsonContent)
+              ? JSON.stringify(jsonContent, null, 2)
+              : "Invalid JSON content"}
+          </pre>
+        ) : (
+          <p>No JSON content available.</p>
+        )}
+      </div>
+    );
+  };
+
+  function handleImagesClick(){
+    setImagesIsOpen(!imagesIsOpen);
+    setTextIsOpen(null);
+    setJsonIsOpen(null);
+    setXlsxIsOpen(null);
+    setLayoutIsOpen(null);
+    setStructuredIsOpen(null);
+      setMarkDownIsOpen(null);
+
+  }
+  function handleMarkDownClick() {
+    setMarkDownIsOpen(!markDownIsOpen);
+    setTextIsOpen(null);
+    setJsonIsOpen(null);
+    setXlsxIsOpen(null);
+    setImagesIsOpen(null);
+    setLayoutIsOpen(null);
+    setStructuredIsOpen(null);
+  }
+  function handleLayOutClick(){
+    setLayoutIsOpen(!layoutIsOpen);
+     setTextIsOpen(null);
+    setJsonIsOpen(null);
+    setXlsxIsOpen(null);
+    setImagesIsOpen(null);
+    setLayoutIsOpen(null);
+    setStructuredIsOpen(null);
+  }
+  function handleTextClick() {
+    setTextIsOpen(!textIsOpen);
+    setMarkDownIsOpen(null);
+    setJsonIsOpen(null);
+    setXlsxIsOpen(null);
+     setImagesIsOpen(null);
+    setLayoutIsOpen(null);
+    setStructuredIsOpen(null);
+  }
+
+  function handleJsonClick() {
+    setJsonIsOpen(!jsonIsOpen);
+    setMarkDownIsOpen(null);
+    setTextIsOpen(null);
+    setXlsxIsOpen(null);
+     setImagesIsOpen(null);
+    setLayoutIsOpen(null);
+    setStructuredIsOpen(null);
+  }
+
+  function handleXlsxClick() {
+    setXlsxIsOpen(!xlsxIsOpen);
+    setMarkDownIsOpen(null);
+    setTextIsOpen(null);
+    setJsonIsOpen(null);
+     setImagesIsOpen(null);
+    setLayoutIsOpen(null);
+    setStructuredIsOpen(null);
+  }
+  function handleStructuredClick(){
+    setStructuredIsOpen(!structuredIsOpen)
+     setMarkDownIsOpen(null);
+    setTextIsOpen(null);
+    setJsonIsOpen(null);
+     setImagesIsOpen(null);
+    setLayoutIsOpen(null);
+    setStructuredIsOpen(null);
+  }
+  // Helper to get button style based on active state
+  const getTabButtonClass = (isActive) =>
+    `w-full h-full rounded-md transition-colors duration-200 ${
+      isActive
+        ? "bg-black text-white"
+        : "bg-slate-200 text-black hover:bg-slate-300"
+    }`;
+
   return (
     <>
       <div>
-        <div className="w-full rounded-md border-[1px] border-gray h-48 ml-6">
+        <div className="w-full rounded-md border-[1px] border-gray max-h-[600px]  ml-6">
           <div className="h-10 w-full flex items-center justify-start ml-3">
             <p className="font-semibold text-black text-xl mt-3">Results</p>
             <button
@@ -331,10 +530,13 @@ const ParsedFileResult = ({ onClose }) => {
           </div>
           <div className="h-8  mt-3 flex items-center justify-start gap-3">
             <div className="ml-4 text-black font-semibold">File Name</div>
-            <div className="w-[350px] h-6 bg-slate-200  ml-3 flex items-center rounded-md text-sm">
+            <div className="w-[380px] h-6 bg-slate-200  ml-3 flex items-center rounded-md text-sm">
               {" "}
-              <p className="ml-2 flex gap-1"><span className="font-semibold"></span> Job Id:<span>294014a9-e6b1-4ba0-bbc4-1f2f22e6d8e8</span></p>
-              <p>
+              <p className="ml-2 flex gap-1">
+                <span className="font-semibold"></span> Job Id:
+                <span>{parsedContent ? parsedContent.job_id : "NO JOB ID"}</span>
+              </p>
+              <p className="ml-7">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 448 512"
@@ -347,21 +549,94 @@ const ParsedFileResult = ({ onClose }) => {
             </div>
           </div>
 
-
-          <div className=" flex items-center justify-center ">
-            <div className="w-[100px] bg-slate-200 font-sans from-neutral-500 rounded-md ml-2 hover:bg-slate-300 "><button className="w-full h-full">MarkDown</button></div>
-            <div className="w-16 bg-slate-200 font-sans from-neutral-500 rounded-md ml-2 hover:bg-slate-300 "><button className="w-full h-full">Text</button></div>
-            <div className="w-16 bg-slate-200 font-sans from-neutral-500 rounded-md ml-2 hover:bg-slate-300 "><button className="w-full h-full">JSON</button></div>
-            <div className="w-20 bg-slate-200 font-sans from-neutral-500 rounded-md ml-2 hover:bg-slate-300 "><button className="w-full h-full">Images</button></div>
-            <div className="w-20 bg-slate-200 font-sans from-neutral-500 rounded-md ml-2 hover:bg-slate-300 "><button className="w-full h-full">Layout</button></div>
-            <div className="w-16 bg-slate-200 font-sans from-neutral-500 rounded-md ml-2 hover:bg-slate-300 "><button className="w-full h-full">XLSX</button></div>
-            <div className="w-28 bg-slate-200 font-sans from-neutral-500 rounded-md ml-2 hover:bg-slate-300 "><button className="w-full h-full">Structured</button></div>
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-[100px] from-neutral-500 rounded-md ml-2">
+              <button
+                className={getTabButtonClass(markDownIsOpen)}
+                onClick={handleMarkDownClick}
+              >
+                MarkDown
+              </button>
+            </div>
+            <div className="w-16 from-neutral-500 rounded-md ml-2">
+              <button
+                className={getTabButtonClass(textIsOpen)}
+                onClick={handleTextClick}
+              >
+                Text
+              </button>
+            </div>
+            <div className="w-16 from-neutral-500 rounded-md ml-2">
+              <button
+                className={getTabButtonClass(jsonIsOpen)}
+                onClick={handleJsonClick}
+              >
+                JSON
+              </button>
+            </div>
+            <div className="w-20 from-neutral-500 rounded-md ml-2">
+              <button className={getTabButtonClass(false)}  onClick={handleImagesClick}>Images</button>
+            </div>
+            <div className="w-20 from-neutral-500 rounded-md ml-2">
+              <button className={getTabButtonClass(false)}  onClick={handleLayOutClick}>Layout</button>
+            </div>
+            <div className="w-16 from-neutral-500 rounded-md ml-2">
+              <button
+                className={getTabButtonClass(xlsxIsOpen)}
+                onClick={handleXlsxClick}
+              >
+                XLSX
+              </button>
+            </div>
+            <div className="w-28 from-neutral-500 rounded-md ml-2">
+              <button className={getTabButtonClass(false)}  onClick={handleStructuredClick}>Structured</button>
+            </div>
           </div>
-          <div className="w-[650px]  border-dashed rounded-sm border-black border-[1px] max-h-64 ml-2 mr-4 bg-slate-200 mt-2">
-              
-          </div>
+          {parsedContent && markDownIsOpen && (
+            <div className="w-[650px] rounded-md  border-dashed border-black border-[1px] max-h-64 overflow-y-scroll ml-2 mr-4 bg-slate-200 mt-2 mb-2">
+              {parsedContent.markdown || "NO MARKDOWN PARSED"}
+            </div>
+          )}
+          {parsedContent && textIsOpen && (
+            <div className="w-[650px] rounded-md   border-dashed  border-black border-[1px] max-h-64 overflow-y-scroll ml-2 mr-4 bg-slate-200 mt-2 mb-2">
+              {parsedContent.text || "NO TEXT PARSED"}
+            </div>
+          )}
+          {jsonIsOpen && jsonContent && (
+            <div className="w-[650px] rounded-md border-dashed border-black border-[1px] max-h-64 overflow-y-scroll ml-2 mr-4 bg-slate-200 mt-2 mb-2">
+              {JSON.stringify(parsedContent.json, null, 2) || "NO JSON PARSED"}
+            </div>
+          )}
+           { parsedContent && layoutIsOpen && (
+            <div className="w-[650px] rounded-md border-dashed border-black border-[1px] max-h-64 overflow-y-scroll ml-2 mr-4 bg-slate-200 mt-2 mb-2">
+              {parsedContent.layout || "NO Layout PARSED"}
+            </div>
+          )}
+           { parsedContent && structuredIsOpen &&(
+            <div className="w-[650px] rounded-md border-dashed border-black border-[1px] max-h-64 overflow-y-scroll ml-2 mr-4 bg-slate-200 mt-2 mb-2">
+              {parsedContent.structured || "NO Structure PARSED"}
+            </div>
+          )}
+           {parsedContent && imagesIsOpen && (
+            <div className="w-[650px] rounded-md border-dashed border-black border-[1px] max-h-64 overflow-y-scroll ml-2 mr-4 bg-slate-200 mt-2 mb-2">
+              {parsedContent.image || "NO Image PARSED"}
+            </div>
+          )}
+          {parsedContent && xlsxIsOpen && (
+            <div className="w-[650px]  rounded-md  border-dashed  border-black border-[1px] max-h-64  overflow-y-scroll ml-2 mr-4 bg-slate-200 mt-2 mb-2">
+              {/* {parsedContent.xlsx && (
+                <a
+                  href={`data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${parsedContent.xlsx}`}
+                  download={`${parsedContent.filename}.xlsx`}
+                >
+                  Download XLSX
+                </a>
+              )} */}
+              {parsedContent.xlsx || "NO xlsx PARSED"}
+            </div>
+          )}
         </div>
       </div>
     </>
-  ); 
+  );
 };

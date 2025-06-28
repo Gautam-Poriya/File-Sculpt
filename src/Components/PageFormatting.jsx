@@ -12,7 +12,7 @@ const PageFormatting = () => {
     <>
       <div className="ml-5 ">
         <button onClick={handlePageFormatting} className="flex items-center">
-          <span className="inline-block hover:border-b-2 hover:border-black">
+          <span className="inline-block hover:border-b-2 hover:border-black font-semibold">
             Page Formatting
           </span>
           <svg
@@ -25,7 +25,7 @@ const PageFormatting = () => {
         </button>
       </div>
       {isPageFormattingIsOpen && (
-        <div className="ml-9 ">
+        <div className="ml-9  text-sm">
           <p>
             If the string contains the string <br />
             pageNumber it will be replaced by the <br />
@@ -46,7 +46,8 @@ const PageFormatting = () => {
             className="w-40 h-8 rounded-md border border-spacing-1 mt-2"
             placeholder="\n---\n"
           />
-          <p className="mt-3">Page Prefix</p>
+
+          <p className="mt-3 flex gap-1"><svg xmlns="http://www.w3.org/2000/svg"   className="w-[13px] h-[13px] ml-1 mt-1 text-slate-200" viewBox="0 0 640 512"><path d="M318.4 16l-161 480h77.5l25.4-81.4h119.5L405 496h77.5L318.4 16zm-40.3 341.9l41.2-130.4h1.5l40.9 130.4h-83.6zM640 405l-10-31.4L462.1 358l19.4 56.5L640 405zm-462.1-47L10 373.7 0 405l158.5 9.4 19.4-56.4z"/></svg>Page Prefix</p>
           <input
             type="text"
             className="w-40 h-8 rounded-md border border-spacing-1 mt-2"

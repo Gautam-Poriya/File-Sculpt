@@ -12,7 +12,7 @@ const WebHook = () => {
     <>
       <div className="ml-5 ">
         <button onClick={handleWebHookButton} className="flex items-center">
-          <span className="inline-block hover:border-b-2 hover:border-black">
+          <span className="inline-block hover:border-b-2 hover:border-black font-semibold">
             Web Hook
           </span>{" "}
           <svg
@@ -25,20 +25,25 @@ const WebHook = () => {
         </button>
       </div>
       {isWebHookIsOpen && (
-        <div className="ml-9 ">
+        <>
+        <div className="ml-9 text-sm">
           <p>
-            The URL of the webhook endpoint where
-            <br /> data will be sent
+            The URL of the webhook endpoint 
+            <br />where data will be sent.
             <br />
-            This should be a valid URL that your
-            <br /> application or service is set up to handle <br /> incoming
-            data from.
+            This should be a valid URL 
+            <br />that your application or service is  <br />set up to handle incoming
+           <br/> data from.
             <br />
             The protocol must be HTTPS.
             <br />
-            The host must be a domain name rather than <br /> an IP address.
+            The host must be a domain name <br /> rather than an IP address.
           </p>
         </div>
+        {/* <div className="mockup-code w-16 ml-4">
+        <pre data-prefix="$"><code>npm i daisyui</code></pre>
+      </div> */}
+      </>
       )}
     </>
   );

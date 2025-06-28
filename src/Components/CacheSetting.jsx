@@ -12,7 +12,7 @@ const CacheSetting = () => {
     <>
       <div className="ml-5 ">
         <button onClick={handleCacheSetting} className="flex items-center">
-          <span className="inline-block hover:border-b-2 hover:border-black">
+          <span className="inline-block hover:border-b-2 hover:border-black font-semibold">
             Cache setting
           </span>{" "}
           <svg
