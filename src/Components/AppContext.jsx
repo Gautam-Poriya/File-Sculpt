@@ -14,6 +14,8 @@ const AppContext = createContext();
     const [mainButtonLabel, setMainButtonLabel] = useState("Test-Org");
     const [userData,setUserData]=useState("abc@gmail.com");
     const [currentUser,setCurrentUser]=useState();
+   // const [newOrganization, setNewOrganization] = useState("Test-Org");
+
   
 
   return (

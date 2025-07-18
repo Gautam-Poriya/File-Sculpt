@@ -1,5 +1,5 @@
-import React from "react";
-import { useState,useEffect } from "react";
+import React, { useRef } from "react";
+import { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar.jsx";
 import Services from "./Aside/Services.jsx";
@@ -16,21 +16,33 @@ import * as pdfjs from "pdfjs-dist";
 import axios from "axios";
 import { useAppContext } from "./AppContext"; // Import the context
 // import ReactJson from "react-json-view-lite";
+import ReactMarkdown from "react-markdown";
+import Prism from "prismjs";
+import "prismjs/themes/prism.css";
+import "prismjs/components/prism-json"; // <-- Add this line
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
+import rehypeHighlight from "rehype-highlight";
+import * as XLSX from "xlsx";
+// If not installed, run: npm install remark-math rehype-katex rehype-highlight katex
 
 const Parse = () => {
+  const [collapsed, setCollapsed] = useState(false);
   return (
     <>
       <Navbar />
-      <section className="flex">
-        <Services />
-        <ParseService />
+      <section className="flex flex-1 min-h-0 min-w-0 h-[calc(100vh-80px)]">
+        <Services collapsed={collapsed} setCollapsed={setCollapsed} />
+        <ParseService collapsed={collapsed} />
       </section>
     </>
   );
 };
 export default Parse;
 
-const ParseService = () => {
+const ParseService = ({ collapsed }) => {
   const { selectedOption } = useAppContext(); // Access context state
   const { mainButtonLabel } = useAppContext();
   const { userData } = useAppContext();
@@ -49,15 +61,11 @@ const ParseService = () => {
       setMessage("Please wait, we are parsing the Job...");
     }
   }, [loading]);
-  function handleDocumentation() {
-    window.location.href = "https://docs.cloud.llamaindex.ai/";
-  }
+ 
   function handleSendboxButton() {
     navigate("/parse");
   }
-  // function navigateToGitHub(){
-  //   navigate("https://github.com/Gautam-Poriya/Document-Parsing/issues")
-  // }
+ 
   function handleHistoryButton() {
     navigate("/parse/history");
   }
@@ -66,27 +74,14 @@ const ParseService = () => {
     setFile(uploadedfile);
     setStep(2);
   };
-  // Handle parse button click (job processing)
-  // const handleParse = () => {
-  //   // Show JobId component for 5 seconds
-  //   if(!selectedFile==null){
-  //     alert("Please Choose Your File First")
-  //   }else{
 
-  //     setStep(2);
-
-  //     setTimeout(() => {
-  //       setStep(3); // After 5 seconds, move to JobResult component
-  //     }, 5000);
-  //   }
-  // };
   // Handle close button in JobResult component
   const handleCloseJobResult = () => {
     setStep(1);
 
-    // Go back to FileUpload component
-  };
   
+  };
+
   const handleParsingOnClickButton = async () => {
     //loading
     setLoading(true);
@@ -97,13 +92,7 @@ const ParseService = () => {
 
       setStep("2");
 
-      // Simulating a delay for processing
-    //  if(response!==NULL){
-    //   setStep("3");
-    //  }else{
-    //   alert("Plese Try Again ")
-    //  }
-
+     
       setTimeout(() => {
         setStep("3");
       }, 10000);
@@ -123,7 +112,7 @@ const ParseService = () => {
     console.log(formData);
     try {
       const response = await axios.post(
-        "http://localhost:5000/parse-pdf",
+        "http://localhost:5000",
         formData,
         {
           headers: {
@@ -135,7 +124,7 @@ const ParseService = () => {
       console.log("front end recieve final data:", response);
       // jsonContent=JSON.parse(response.data)
       setParsedContent(response.data);
-      console.log("type of result",typeof response.data);
+      console.log("type of result", typeof response.data);
       console.log("parsed content backend mathi aayvo:", response);
       // setJsonContent(JSON.parse(response.data.file.json));
     } catch (error) {
@@ -147,55 +136,67 @@ const ParseService = () => {
 
   return (
     <>
-      <article className="h-screen w-4/5">
-        <div className="ml-10 mt-5 ">
-          <div className="flex gap-2">
+      <article
+        className={`flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden p-6 transition-all duration-300 ${
+          collapsed ? "ml-14" : "ml-52 md:ml-64"
+        }`}
+      >
+        <div className="ml-10 mt-5 flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex gap-2 items-center min-w-0">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="w-3 h-3 mt-2"
+              className="w-8 h-8 flex-shrink-0"
               viewBox="0 0 512 512"
             >
               <path d="M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zm88 64l0 64-88 0 0-64 88 0zm56 0l88 0 0 64-88 0 0-64zm240 0l0 64-88 0 0-64 88 0zM64 224l88 0 0 64-88 0 0-64zm232 0l0 64-88 0 0-64 88 0zm64 0l88 0 0 64-88 0 0-64zM152 352l0 64-88 0 0-64 88 0zm56 0l88 0 0 64-88 0 0-64zm240 0l0 64-88 0 0-64 88 0z" />
             </svg>
-            <h5 className="font-bold text-xl">FileSculpt</h5>
+            <div className="flex flex-col min-w-0">
+              <h5 className="font-bold text-xl truncate">FileSculpt</h5>
+              <p className="truncate">
+                Analyze documents, tailored for optimal performance with RAG.
+              </p>
+            </div>
           </div>
-          <p>Analyze documents, tailored for optimal performance with RAG.</p>
+          <button
+            className="w-64 h-12 rounded-lg bg-gradient-to-r from-pink-400 to-blue-400 text-white shadow flex items-center justify-center gap-3 font-semibold text-base transition-all duration-200 animate-github-fade-in hover:from-blue-500 hover:to-pink-500 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            style={{ animationDelay: "0.2s" }}
+          >
+            <a
+              href="https://github.com/Gautam-Poriya/Document-Parsing/issues"
+              target="_blank"
+              className="w-full h-full flex items-center justify-center gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-6 h-6 text-white"
+              >
+                <path d="M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.184 6.839 9.504.5.092.682-.217.682-.482 0-.237-.009-.868-.014-1.703-2.782.605-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.004.07 1.532 1.032 1.532 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.339-2.221-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.987 1.029-2.687-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.025A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.295 2.748-1.025 2.748-1.025.546 1.378.202 2.397.1 2.65.64.7 1.028 1.594 1.028 2.687 0 3.847-2.337 4.695-4.566 4.944.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.749 0 .267.18.578.688.48C19.138 20.2 22 16.447 22 12.021 22 6.484 17.523 2 12 2z" />
+              </svg>
+              Report issue on Github
+            </a>
+          </button>
+          <style>{`
+            @keyframes githubFadeIn {
+              0% { opacity: 0; transform: translateY(32px) scale(0.92); }
+              60% { opacity: 0.7; transform: translateY(-8px) scale(1.04); }
+              100% { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            .animate-github-fade-in {
+              animation: githubFadeIn 0.9s cubic-bezier(0.23, 1, 0.32, 1) both;
+            }
+          `}</style>
         </div>
         <div className="h-1 border-b-2 border-b-slate-50 w-full mt-2"></div>
-        <div className="h-20 mt-0 pt-0">
-          <button
-            className="justify-center mt-8 ml-10 w-28 h-10 bg-slate-100"
-            onClick={handleSendboxButton}
-          >
-            Sendbox
-          </button>
-          <button
-            className="ml-8 bg-slate-100 h-10 w-28"
-            onClick={handleHistoryButton}
-          >
-            History
-          </button>
-
-          {/* <button
-            className="ml-80 border-zinc-400   border w-40 rounded-md h-10 hover:bg-black hover:text-white"
-            onClick={handleDocumentation}
-          >
-            Documentation
-          </button> */}
-          <button className="ml-[500px] border-zinc-400   border w-48 rounded-md h-10 hover:bg-black hover:text-white" >
-             <a href="https://github.com/Gautam-Poriya/Document-Parsing/issues" target="_blank" className="w-full h-full">
-               
-            Report issue on Github
-              </a>
-          </button>
-        </div>
+        {/* Button row removed, as Report issue is now above */}
 
         {/* main funtionality of parsing */}
 
         <section className="h-72">
           <div className="flex">
             <div className="w-1/3">
-              <div className="w-full h-72  rounded-md border-2 border-gray-300  overflow-y-scroll overflow-hidden ">
+              <div className="w-full h-72  rounded-md border-2 border-gray-300  overflow-y-scroll overflow-hidden scrollbar-gradient">
                 <div>
                   <h5 className="ml-3 mt-3 font-bold text-xl">
                     Parse Settings
@@ -219,7 +220,7 @@ const ParseService = () => {
                   </p>
                 </div> */}
 
-                  {/* checkbox goes here bu not impleamented yet */}
+                  {/* checkbox goes here but not impleamented yet */}
                   {/* <div className="bg-slate-400 h-48">
                    <input type="textarea" placeholder="The provided document is a manga comic book. Most pages do NOT have a title. It does not contain tables. Try to reconstruct the dialogue spoken in a cohesive way." className="overflow-y-scroll overflow-x-clip w-full h-28 mr-3 ml-3 "/>
                    </div> */}
@@ -246,44 +247,59 @@ const ParseService = () => {
                 {/* <div><ParsingButton /></div>
                  */}
               </div>
-              <div>
-                {/* <ParsingButton  validationOfFiles={selectedFile}/> */}
+              <div className="w-full flex justify-center">
                 <div
-                  className={`flex rounded-md border border-slate-100  ml-2 w-[320px] mt-1 h-14 items-center  ${
-                    selectedFile ? "bg-green-300" : "bg-white"
-                  }`}
+                  className={`w-full max-w-xs mx-auto mt-4 p-4 rounded-xl shadow-md border border-slate-100 flex flex-col items-center bg-white/80 transition-all duration-300 animate-parse-fade-in`}
                 >
-                  <p className="ml-2">Upload File first to parse</p>
+                  <p className="mb-3 text-gray-700 text-sm font-medium">
+                    Upload File first to parse
+                  </p>
                   <button
-                    className={`ml-14 w-20 h-10 rounded-md text-white bg-black ${
-                      selectedFile
-                        ? "bg-black text-white cursor-pointer"
-                        : "bg-slate-300 text-white cursor-not-allowed"
-                    }`}
+                    className={`w-32 h-11 rounded-lg font-semibold text-base shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 bg-gradient-to-r from-pink-400 to-blue-400 text-white animate-parse-fade-in-btn
+                      ${
+                        selectedFile
+                          ? "hover:from-blue-500 hover:to-pink-500 hover:scale-105 cursor-pointer"
+                          : "bg-slate-300 text-white cursor-not-allowed"
+                      }`}
                     onClick={handleParsingOnClickButton}
+                    disabled={!selectedFile}
                   >
                     Parse
                   </button>
+                  <style>{`
+                    @keyframes parseFadeIn {
+                      0% { opacity: 0; transform: translateY(32px) scale(0.98); }
+                      100% { opacity: 1; transform: translateY(0) scale(1); }
+                    }
+                    .animate-parse-fade-in {
+                      animation: parseFadeIn 0.7s cubic-bezier(0.23, 1, 0.32, 1) both;
+                    }
+                    @keyframes parseFadeInBtn {
+                      0% { opacity: 0; transform: translateY(16px) scale(0.96); }
+                      100% { opacity: 1; transform: translateY(0) scale(1); }
+                    }
+                    .animate-parse-fade-in-btn {
+                      animation: parseFadeInBtn 0.7s 0.2s cubic-bezier(0.23, 1, 0.32, 1) both;
+                    }
+                  `}</style>
                 </div>
               </div>
             </div>
 
             {/* File Upload area is here */}
             <div className="w-2/3">
-              {step == 1 && (
+              {loading ? (
+                <FileUpLoading message={message} />
+              ) : step == 1 ? (
                 <FileUpload
                   selectedFile={selectedFile}
                   onFileUpLoad={handleFileUpLoad}
                   setSelectedFile={setSelectedFile}
+                  collapsed={collapsed}
                 />
-              )}
-              {step == 2 && (
-                <>
-                  <FileUpLoading message={message} />
-                  {/* <button onClick={handleParse}>Parse</button> */}
-                </>
-              )}
-              {step == 3 && (
+              ) : step == 2 ? (
+                <FileUpLoading message={message} />
+              ) : step == 3 ? (
                 <ParsedFileResult
                   onClose={handleCloseJobResult}
                   parsedContent={parsedContent}
@@ -291,109 +307,167 @@ const ParseService = () => {
                   // job_id={parsedContent.job_id}
                   jsonContent={jsonContent}
                 />
-              )}
+              ) : null}
             </div>
           </div>
-          {/* </div> */}
         </section>
       </article>
     </>
   );
 };
 
-const FileUpload = ({ selectedFile, setSelectedFile }) => {
+const FileUpload = ({ selectedFile, setSelectedFile, collapsed }) => {
   const [cancelButtonClick, setCancelButtonClick] = useState(false);
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
   };
 
   function handleCancelClick() {
-    // alert("somone click cancel button")
     setCancelButtonClick(!cancelButtonClick);
     setSelectedFile(!selectedFile);
   }
   return (
-    <div className="w-full min-h-[200px] h-fit border border-slate-300 rounded-2xl ml-1 mt-1 mb-1 mr-5 relative ">
-      {/* <div className="w-full h-72 border border-slate-300 rounded-2xl ml-1 mt-1 mb-1 mr-5"> */}
-      <div className="h-64 mt-1 ml-1 mr-1 mb-3  rounded-xl  border-dashed border-gray-400 border-2 overflow-hidden justify-center items-center relative ">
-        <div>
+    <div className="flex-1 min-h-0 flex items-center justify-center animate-fileupload-fade-in">
+      <div
+        className={`w-full max-w-2xl bg-white/80 rounded-xl shadow-lg p-6 flex flex-col items-center transition-all duration-300`}
+      >
+        <div className="w-full h-72 flex flex-col justify-center items-center border-2 border-dashed border-blue-300 rounded-xl bg-gradient-to-br from-blue-50 to-pink-50 relative transition-all duration-300 overflow-y-auto py-4">
           <input
             type="file"
-            className="w-full h-64 block items-center -mt-20 text-white file:hidden absolute "
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             onChange={handleFileChange}
           />
-
-          <p className="relative text-center mt-20">
-            <span className="font-bold text-gray-500">
-              Drag 'n' drop files here, or click to select files
-            </span>
-            <br />
-            <span className="ml-7 text-gray-300">
+          <div className="z-0 flex flex-col items-center justify-center pointer-events-none">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-12 h-12 text-blue-400 mb-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            <p className="font-bold text-gray-600 text-lg mb-1">
+              Drag & drop or click to select files
+            </p>
+            <p className="text-gray-400 text-sm">
               You can upload a file up to 315 MB.
-            </span>
-          </p>
+            </p>
+          </div>
         </div>
-      </div>
 
-      {selectedFile && (
-        <>
-          <div className="flex ">
-            <div className="w-full h-16  mb-2 mr-1 relative text-white rounded-lg flex ml-4">
+        {selectedFile && (
+          <div className="w-full max-w-2xl flex items-center justify-between mt-4 bg-blue-50 rounded-lg p-3 shadow animate-fileupload-fade-in-selected">
+            <div className="flex items-center gap-3">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 384 512"
+                className="w-10 h-10 text-blue-500"
+              >
+                <path d="M320 464c8.8 0 16-7.2 16-16l0-288-80 0c-17.7 0-32-14.3-32-32l0-80L64 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l256 0zM0 64C0 28.7 28.7 0 64 0L229.5 0c17 0 33.3 6.7 45.3 18.7l90.5 90.5c12 12 18.7 28.3 18.7 45.3L384 448c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 64z" />
+              </svg>
               <div>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 384 512"
-                  className="w-10 h-10 mt-3"
-                >
-                  <path
-                    d="M320 464c8.8 0 16-7.2 16-16l0-288-80 0c-17.7 0-32-14.3-32-32l0-80L64 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l256 0zM0 64C0 28.7 28.7 0 64 0L229.5 0c17 0 33.3 6.7 45.3 18.7l90.5 90.5c12 12 18.7 28.3 18.7 45.3L384 448c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 64z"
-                    className="w-10 h-10 text-black"
-                  />
-                </svg>
-              </div>
-              <div className="ml-3 items-center justify-center mt-2">
-                <div className="text-black ">{selectedFile.name}</div>
-                <div className="text-black">
-                  {" "}
+                <div className="text-blue-900 font-semibold truncate max-w-xs">
+                  {selectedFile.name}
+                </div>
+                <div className="text-blue-700 text-xs">
                   {(selectedFile.size / 1024).toFixed(2)} KB
                 </div>
               </div>
             </div>
-            <div className="mr-6 flex items-center justify-center mt-2 border-2 border-black rounded-full w-10 h-10">
-              <button onClick={handleCancelClick}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 384 512"
-                  className="w-6 h-6"
-                >
-                  <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" />
-                </svg>
-              </button>
-            </div>
+            <button
+              onClick={handleCancelClick}
+              className="ml-4 w-9 h-9 flex items-center justify-center rounded-full bg-white border border-blue-200 shadow hover:bg-blue-100 transition-all duration-200"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 384 512"
+                className="w-6 h-6 text-blue-500"
+              >
+                <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" />
+              </svg>
+            </button>
           </div>
-        </>
-      )}
+        )}
+      </div>
+      <style>{`
+        @keyframes fileuploadFadeIn {
+          0% { opacity: 0; transform: translateY(24px) scale(0.98); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-fileupload-fade-in {
+          animation: fileuploadFadeIn 0.7s cubic-bezier(0.23, 1, 0.32, 1) both;
+        }
+        @keyframes fileuploadFadeInSelected {
+          0% { opacity: 0; transform: translateY(12px) scale(0.96); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-fileupload-fade-in-selected {
+          animation: fileuploadFadeInSelected 0.5s 0.1s cubic-bezier(0.23, 1, 0.32, 1) both;
+        }
+      `}</style>
     </div>
   );
 };
 
 const FileUpLoading = ({ message }) => {
   return (
-    <>
-    {/* <div className=" w-full h-full justify-center-items items-center flex">
-
-    <div>{message}</div>
-    </div> */}
-     <div className="w-full min-h-[200px] h-fit border border-slate-300 rounded-2xl ml-1 mt-1 mb-1 mr-5 relative ">
-      {/* <div className="w-full h-72 border border-slate-300 rounded-2xl ml-1 mt-1 mb-1 mr-5"> */}
-      <div className="h-64 mt-1 ml-1 mr-1 mb-3 flex rounded-xl  border-dashed border-gray-400 border-2 overflow-hidden justify-center items-center relative ">
-       {message}
+    <div className="w-full max-w-2xl mx-auto my-6 bg-white/80 rounded-xl shadow-lg p-8 flex flex-col items-center justify-center transition-all duration-300 animate-upload-fade-in">
+      <div className="w-full h-72 flex flex-col justify-center items-center border-2 border-dashed border-blue-300 rounded-xl bg-gradient-to-br from-blue-50 to-pink-50 relative transition-all duration-300">
+        <div className="flex-1 flex flex-col items-center justify-center w-full h-full">
+          <span className="mb-8">
+            <span className="inline-block w-20 h-20 rounded-full border-8 border-t-transparent border-r-transparent border-b-blue-400 border-l-pink-400 animate-upload-spin bg-gradient-conic-smooth"></span>
+          </span>
+          <p className="text-lg font-semibold text-blue-700 animate-upload-fade-in-message text-center">
+            {message || "Uploading..."}
+          </p>
+        </div>
       </div>
+      <style>{`
+        @keyframes uploadSpin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .animate-upload-spin {
+          animation: uploadSpin 1.1s linear infinite;
+        }
+        @keyframes uploadFadeIn {
+          0% { opacity: 0; transform: translateY(24px) scale(0.98); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-upload-fade-in {
+          animation: uploadFadeIn 0.7s cubic-bezier(0.23, 1, 0.32, 1) both;
+        }
+        @keyframes uploadFadeInMessage {
+          0% { opacity: 0; }
+          100% { opacity: 1; }
+        }
+        .animate-upload-fade-in-message {
+          animation: uploadFadeInMessage 1.2s 0.2s cubic-bezier(0.23, 1, 0.32, 1) both;
+        }
+        /* Extra smooth conic gradient for spinner */
+        .bg-gradient-conic-smooth {
+          background: conic-gradient(
+            from 0deg,
+            #f472b6 0%,
+            #a78bfa 20%,
+            #38bdf8 40%,
+            #818cf8 60%,
+            #06b6d4 80%,
+            #f472b6 100%
+          );
+          /* For browsers that support it, mask the center for a donut effect */
+          -webkit-mask-image: radial-gradient(circle, transparent 60%, black 100%);
+          mask-image: radial-gradient(circle, transparent 60%, black 100%);
+        }
+      `}</style>
     </div>
-    </>
-  )
-  
-  
+  );
 };
 
 const ParsedFileResult = ({
@@ -403,15 +477,13 @@ const ParsedFileResult = ({
   job_id,
   jsonContent,
 }) => {
-  
   const [markDownIsOpen, setMarkDownIsOpen] = useState(null);
   const [textIsOpen, setTextIsOpen] = useState(null);
   const [jsonIsOpen, setJsonIsOpen] = useState(null);
   const [xlsxIsOpen, setXlsxIsOpen] = useState(null);
-  const [imagesIsOpen,setImagesIsOpen]=useState(null);
-   const [layoutIsOpen,setLayoutIsOpen]=useState(null);
-    const [structuredIsOpen,setStructuredIsOpen]=useState(null);
-
+  const [imagesIsOpen, setImagesIsOpen] = useState(null);
+  const [layoutIsOpen, setLayoutIsOpen] = useState(null);
+  const [structuredIsOpen, setStructuredIsOpen] = useState(null);
 
   const JsonDisplay = ({ jsonContent }) => {
     // Check if jsonContent is an object
@@ -433,15 +505,14 @@ const ParsedFileResult = ({
     );
   };
 
-  function handleImagesClick(){
+  function handleImagesClick() {
     setImagesIsOpen(!imagesIsOpen);
     setTextIsOpen(null);
     setJsonIsOpen(null);
     setXlsxIsOpen(null);
     setLayoutIsOpen(null);
     setStructuredIsOpen(null);
-      setMarkDownIsOpen(null);
-
+    setMarkDownIsOpen(null);
   }
   function handleMarkDownClick() {
     setMarkDownIsOpen(!markDownIsOpen);
@@ -452,9 +523,9 @@ const ParsedFileResult = ({
     setLayoutIsOpen(null);
     setStructuredIsOpen(null);
   }
-  function handleLayOutClick(){
+  function handleLayOutClick() {
     setLayoutIsOpen(!layoutIsOpen);
-     setTextIsOpen(null);
+    setTextIsOpen(null);
     setJsonIsOpen(null);
     setXlsxIsOpen(null);
     setImagesIsOpen(null);
@@ -466,7 +537,7 @@ const ParsedFileResult = ({
     setMarkDownIsOpen(null);
     setJsonIsOpen(null);
     setXlsxIsOpen(null);
-     setImagesIsOpen(null);
+    setImagesIsOpen(null);
     setLayoutIsOpen(null);
     setStructuredIsOpen(null);
   }
@@ -476,7 +547,7 @@ const ParsedFileResult = ({
     setMarkDownIsOpen(null);
     setTextIsOpen(null);
     setXlsxIsOpen(null);
-     setImagesIsOpen(null);
+    setImagesIsOpen(null);
     setLayoutIsOpen(null);
     setStructuredIsOpen(null);
   }
@@ -486,157 +557,534 @@ const ParsedFileResult = ({
     setMarkDownIsOpen(null);
     setTextIsOpen(null);
     setJsonIsOpen(null);
-     setImagesIsOpen(null);
+    setImagesIsOpen(null);
     setLayoutIsOpen(null);
     setStructuredIsOpen(null);
   }
-  function handleStructuredClick(){
-    setStructuredIsOpen(!structuredIsOpen)
-     setMarkDownIsOpen(null);
+  function handleStructuredClick() {
+    setStructuredIsOpen(!structuredIsOpen);
+    setMarkDownIsOpen(null);
     setTextIsOpen(null);
     setJsonIsOpen(null);
-     setImagesIsOpen(null);
+    setImagesIsOpen(null);
     setLayoutIsOpen(null);
     setStructuredIsOpen(null);
   }
   // Helper to get button style based on active state
   const getTabButtonClass = (isActive) =>
-    `w-full h-full rounded-md transition-colors duration-200 ${
+    `px-4 py-2 rounded-lg font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 shadow-sm text-base
+    ${
       isActive
-        ? "bg-black text-white"
-        : "bg-slate-200 text-black hover:bg-slate-300"
+        ? "bg-gradient-to-r from-pink-400 to-blue-400 text-white scale-105 shadow-md"
+        : "bg-white/80 text-black hover:bg-blue-100 hover:text-blue-700"
     }`;
 
+  // Ref for the tab content area
+  const contentRef = useRef(null);
+
+  // Always scroll to top when JSON or Text tab is opened
+  useEffect(() => {
+    if (contentRef.current && (jsonIsOpen || textIsOpen)) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [jsonIsOpen, textIsOpen]);
+
+  // Scroll to top for all tab/content changes (fallback for other tabs)
+  useEffect(() => {
+    if (contentRef.current && !(jsonIsOpen || textIsOpen)) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [
+    markDownIsOpen,
+    xlsxIsOpen,
+    imagesIsOpen,
+    layoutIsOpen,
+    structuredIsOpen,
+    parsedContent,
+  ]);
+
   return (
-    <>
-      <div>
-        <div className="w-full rounded-md border-[1px] border-gray max-h-[600px]  ml-6">
-          <div className="h-10 w-full flex items-center justify-start ml-3">
-            <p className="font-semibold text-black text-xl mt-3">Results</p>
+    <div className="flex justify-center items-center w-full h-full min-h-[400px] animate-parse-result-fade-in">
+      <div className="w-full max-w-3xl bg-white/80 rounded-2xl shadow-2xl p-8 flex flex-col items-center border border-slate-200 backdrop-blur-md transition-all duration-300">
+        {/* Header */}
+        <div className="w-full flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+          <div
+            className={`flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto text-center sm:text-left transition-all duration-300`}
+          >
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start">
+              <svg
+                className="w-8 h-8 text-blue-400 flex-shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 17v-6a2 2 0 012-2h2a2 2 0 012 2v6m-6 0h6"
+                />
+              </svg>
+              <span className="font-bold text-xl text-blue-900 truncate">
+                Results
+              </span>
+            </div>
+            <span className="text-xs text-blue-500 bg-blue-100 rounded px-2 py-1 w-full sm:w-auto text-center sm:text-left">
+              Job Id: {parsedContent ? parsedContent.job_id : "NO JOB ID"}
+            </span>
+          </div>
+          <div className="flex gap-3 items-center">
+            <button
+              onClick={() => {
+                // Download logic based on active tab
+                let data = "";
+                let filename = "result";
+                let type = "text/plain";
+                if (markDownIsOpen && parsedContent?.markdown) {
+                  data = parsedContent.markdown;
+                  filename += ".md";
+                } else if (textIsOpen && parsedContent?.text) {
+                  data = parsedContent.text;
+                  filename += ".txt";
+                } else if (jsonIsOpen && parsedContent?.json) {
+                  data = JSON.stringify(parsedContent.json, null, 2);
+                  filename += ".json";
+                  type = "application/json";
+                } else if (imagesIsOpen && parsedContent?.image) {
+                  data = parsedContent.image;
+                  filename += ".png"; // or .jpg if you know the type
+                  type = "image/png";
+                } else if (layoutIsOpen && parsedContent?.layout) {
+                  data = parsedContent.layout;
+                  filename += "-layout.txt";
+                } else if (structuredIsOpen && parsedContent?.structured) {
+                  data = parsedContent.structured;
+                  filename += "-structured.txt";
+                } else if (xlsxIsOpen && parsedContent?.xlsx) {
+                  data = parsedContent.xlsx;
+                  filename += ".xlsx";
+                  type =
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                } else {
+                  alert("No content to download for this tab.");
+                  return;
+                }
+                // For images/xlsx, if data is base64, handle accordingly
+                let blob;
+                if (
+                  (imagesIsOpen || xlsxIsOpen) &&
+                  data &&
+                  typeof data === "string" &&
+                  data.length > 100
+                ) {
+                  // Assume base64
+                  const byteString = atob(data.split(",")[1] || data);
+                  const ab = new ArrayBuffer(byteString.length);
+                  const ia = new Uint8Array(ab);
+                  for (let i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                  }
+                  blob = new Blob([ab], { type });
+                } else {
+                  blob = new Blob([data], { type });
+                }
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                  window.URL.revokeObjectURL(url);
+                  document.body.removeChild(a);
+                }, 0);
+              }}
+              className="bg-gradient-to-r from-blue-400 to-pink-400 text-white px-5 py-2 rounded-lg font-semibold shadow transition-all duration-200 hover:from-pink-500 hover:to-blue-500 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-300 flex items-center gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                className="w-5 h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"
+                />
+              </svg>
+              Download
+            </button>
             <button
               onClick={onClose}
-              className="bg-slate-100 border-[1px] flex items-center justify-center gap-3 border-gray w-28 text-black h-10 rounded-md ml-[465px] mt-3 font-semibold text-md hover:bg-black hover:duration-200 hover:text-white"
+              className="bg-gradient-to-r from-pink-400 to-blue-400 text-white px-5 py-2 rounded-lg font-semibold shadow transition-all duration-200 hover:from-blue-500 hover:to-pink-500 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-300 flex items-center gap-2"
             >
-              Close{" "}
+              Close
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 384 512"
-                className="w-5 h-5 "
+                className="w-5 h-5"
                 fill="currentColor"
               >
                 <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" />
               </svg>
             </button>
           </div>
-          <div className="h-8  mt-3 flex items-center justify-start gap-3">
-            <div className="ml-4 text-black font-semibold">File Name</div>
-            <div className="w-[380px] h-6 bg-slate-200  ml-3 flex items-center rounded-md text-sm">
-              {" "}
-              <p className="ml-2 flex gap-1">
-                <span className="font-semibold"></span> Job Id:
-                <span>{parsedContent ? parsedContent.job_id : "NO JOB ID"}</span>
-              </p>
-              <p className="ml-7">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 448 512"
-                  className="w-4 h-4 text-gray-900 ml-1 "
-                  fill="currentColor"
-                >
-                  <path d="M384 336l-192 0c-8.8 0-16-7.2-16-16l0-256c0-8.8 7.2-16 16-16l140.1 0L400 115.9 400 320c0 8.8-7.2 16-16 16zM192 384l192 0c35.3 0 64-28.7 64-64l0-204.1c0-12.7-5.1-24.9-14.1-33.9L366.1 14.1c-9-9-21.2-14.1-33.9-14.1L192 0c-35.3 0-64 28.7-64 64l0 256c0 35.3 28.7 64 64 64zM64 128c-35.3 0-64 28.7-64 64L0 448c0 35.3 28.7 64 64 64l192 0c35.3 0 64-28.7 64-64l0-32-48 0 0 32c0 8.8-7.2 16-16 16L64 464c-8.8 0-16-7.2-16-16l0-256c0-8.8 7.2-16 16-16l32 0 0-48-32 0z" />
-                </svg>
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-[100px] from-neutral-500 rounded-md ml-2">
-              <button
-                className={getTabButtonClass(markDownIsOpen)}
-                onClick={handleMarkDownClick}
-              >
-                MarkDown
-              </button>
-            </div>
-            <div className="w-16 from-neutral-500 rounded-md ml-2">
-              <button
-                className={getTabButtonClass(textIsOpen)}
-                onClick={handleTextClick}
-              >
-                Text
-              </button>
-            </div>
-            <div className="w-16 from-neutral-500 rounded-md ml-2">
-              <button
-                className={getTabButtonClass(jsonIsOpen)}
-                onClick={handleJsonClick}
-              >
-                JSON
-              </button>
-            </div>
-            <div className="w-20 from-neutral-500 rounded-md ml-2">
-              <button className={getTabButtonClass(false)}  onClick={handleImagesClick}>Images</button>
-            </div>
-            <div className="w-20 from-neutral-500 rounded-md ml-2">
-              <button className={getTabButtonClass(false)}  onClick={handleLayOutClick}>Layout</button>
-            </div>
-            <div className="w-16 from-neutral-500 rounded-md ml-2">
-              <button
-                className={getTabButtonClass(xlsxIsOpen)}
-                onClick={handleXlsxClick}
-              >
-                XLSX
-              </button>
-            </div>
-            <div className="w-28 from-neutral-500 rounded-md ml-2">
-              <button className={getTabButtonClass(false)}  onClick={handleStructuredClick}>Structured</button>
-            </div>
-          </div>
+        </div>
+        {/* Tabs */}
+        <div className="w-full flex flex-nowrap gap-2 justify-center items-center mb-4 overflow-x-auto scrollbar-hide transition-all duration-300">
+          <button
+            className={
+              getTabButtonClass(markDownIsOpen) +
+              " w-28 h-11 text-center flex items-center justify-center"
+            }
+            onClick={handleMarkDownClick}
+          >
+            MarkDown
+          </button>
+          <button
+            className={
+              getTabButtonClass(textIsOpen) +
+              " w-20 h-11 text-center flex items-center justify-center"
+            }
+            onClick={handleTextClick}
+          >
+            Text
+          </button>
+          <button
+            className={
+              getTabButtonClass(jsonIsOpen) +
+              " w-20 h-11 text-center flex items-center justify-center"
+            }
+            onClick={handleJsonClick}
+          >
+            JSON
+          </button>
+          <button
+            className={
+              getTabButtonClass(imagesIsOpen) +
+              " w-24 h-11 text-center flex items-center justify-center"
+            }
+            onClick={handleImagesClick}
+          >
+            Images
+          </button>
+          <button
+            className={
+              getTabButtonClass(layoutIsOpen) +
+              " w-24 h-11 text-center flex items-center justify-center"
+            }
+            onClick={handleLayOutClick}
+          >
+            Layout
+          </button>
+          <button
+            className={
+              getTabButtonClass(xlsxIsOpen) +
+              " w-20 h-11 text-center flex items-center justify-center"
+            }
+            onClick={handleXlsxClick}
+          >
+            XLSX
+          </button>
+          <button
+            className={
+              getTabButtonClass(structuredIsOpen) +
+              " w-32 h-11 text-center flex items-center justify-center"
+            }
+            onClick={handleStructuredClick}
+          >
+            Structured
+          </button>
+        </div>
+        <style>{`
+          .scrollbar-hide::-webkit-scrollbar { display: none; }
+          .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        `}</style>
+        {/* Tab Content */}
+        <div
+          ref={contentRef}
+          className="w-full min-h-[180px] max-h-[340px] flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-pink-50 rounded-xl border border-slate-200 shadow-inner p-4 overflow-y-auto animate-tab-content-fade-in"
+        >
           {parsedContent && markDownIsOpen && (
-            <div className="w-[650px] rounded-md  border-dashed border-black border-[1px] max-h-64 overflow-y-scroll ml-2 mr-4 bg-slate-200 mt-2 mb-2">
-              {parsedContent.markdown || "NO MARKDOWN PARSED"}
+            <div className="w-full max-w-2xl h-full flex items-start justify-start text-gray-900 font-sans text-base animate-tab-content-fade-in overflow-auto bg-white rounded-lg p-4 shadow-inner prose prose-blue">
+              {parsedContent.markdown &&
+              parsedContent.markdown.trim() !== "" ? (
+                /[#*\-|`>\[\]_~]/.test(parsedContent.markdown) ? (
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                  >
+                    {parsedContent.markdown}
+                  </ReactMarkdown>
+                ) : (
+                  <pre className="whitespace-pre-wrap break-words text-slate-800 font-mono text-base leading-relaxed selection:bg-blue-100 selection:text-blue-900 w-full">
+                    {parsedContent.markdown}
+                  </pre>
+                )
+              ) : (
+                <span className="text-gray-400 font-semibold text-lg text-center w-full">
+                  NO MARKDOWN PARSED
+                </span>
+              )}
             </div>
           )}
           {parsedContent && textIsOpen && (
-            <div className="w-[650px] rounded-md   border-dashed  border-black border-[1px] max-h-64 overflow-y-scroll ml-2 mr-4 bg-slate-200 mt-2 mb-2">
-              {parsedContent.text || "NO TEXT PARSED"}
+            <div className="w-full max-w-2xl h-full overflow-auto bg-white rounded-lg p-6 shadow-inner animate-tab-content-fade-in">
+              {parsedContent.text && parsedContent.text.trim() !== "" ? (
+                (() => {
+                  const text = parsedContent.text;
+                  // If it's a single line or looks like code/log, use <pre>
+                  if (text.split("\n").length === 1 || /\t|\s{2,}/.test(text)) {
+                    return (
+                      <pre className="whitespace-pre-wrap break-words text-slate-800 font-mono text-base leading-relaxed selection:bg-blue-100 selection:text-blue-900">
+                        {text}
+                      </pre>
+                    );
+                  }
+                  // Otherwise, split into paragraphs
+                  return text.split(/\n\s*\n/).map((para, idx) => {
+                    // Highlight keywords and linkify URLs
+                    let html = para
+                      .replace(
+                        /(https?:\/\/[^\s]+)/g,
+                        '<a href="$1" class="text-blue-600 underline" target="_blank">$1</a>'
+                      )
+                      .replace(
+                        /\b(Error|Warning|Success)\b/gi,
+                        '<span class="font-bold px-1 rounded text-white bg-red-500">$1</span>'
+                      );
+                    return (
+                      <p
+                        key={idx}
+                        className="mb-4 text-slate-800 text-base leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: html }}
+                      />
+                    );
+                  });
+                })()
+              ) : (
+                <span className="text-gray-400 font-semibold text-lg text-center w-full">
+                  NO TEXT PARSED
+                </span>
+              )}
             </div>
           )}
           {jsonIsOpen && jsonContent && (
-            <div className="w-[650px] rounded-md border-dashed border-black border-[1px] max-h-64 overflow-y-scroll ml-2 mr-4 bg-slate-200 mt-2 mb-2">
-              {JSON.stringify(parsedContent.json, null, 2) || "NO JSON PARSED"}
-            </div>
+            <pre
+              className="w-full max-w-2xl h-full whitespace-pre-wrap break-words text-blue-900 font-mono text-base animate-tab-content-fade-in overflow-auto bg-white rounded-lg p-4 shadow-inner language-json"
+              dangerouslySetInnerHTML={{
+                __html:
+                  parsedContent.json &&
+                  Object.keys(parsedContent.json).length > 0
+                    ? Prism.highlight(
+                        JSON.stringify(parsedContent.json, null, 2),
+                        Prism.languages.json,
+                        "json"
+                      )
+                    : "NO JSON PARSED",
+              }}
+            />
           )}
-           { parsedContent && layoutIsOpen && (
-            <div className="w-[650px] rounded-md border-dashed border-black border-[1px] max-h-64 overflow-y-scroll ml-2 mr-4 bg-slate-200 mt-2 mb-2">
-              {parsedContent.layout || "NO Layout PARSED"}
-            </div>
+          {parsedContent && layoutIsOpen && (
+            <pre className="w-full max-w-2xl h-full whitespace-pre-wrap break-words text-gray-900 font-mono text-base animate-tab-content-fade-in overflow-auto bg-white rounded-lg p-4 shadow-inner">
+              {parsedContent.layout && parsedContent.layout.trim() !== ""
+                ? parsedContent.layout
+                : "NO LAYOUT PARSED"}
+            </pre>
           )}
-           { parsedContent && structuredIsOpen &&(
-            <div className="w-[650px] rounded-md border-dashed border-black border-[1px] max-h-64 overflow-y-scroll ml-2 mr-4 bg-slate-200 mt-2 mb-2">
-              {parsedContent.structured || "NO Structure PARSED"}
-            </div>
+          {parsedContent && structuredIsOpen && (
+            <pre className="w-full max-w-2xl h-full whitespace-pre-wrap break-words text-gray-900 font-mono text-base animate-tab-content-fade-in overflow-auto bg-white rounded-lg p-4 shadow-inner">
+              {parsedContent.structured &&
+              parsedContent.structured.trim() !== ""
+                ? parsedContent.structured
+                : "NO STRUCTURED PARSED"}
+            </pre>
           )}
-           {parsedContent && imagesIsOpen && (
-            <div className="w-[650px] rounded-md border-dashed border-black border-[1px] max-h-64 overflow-y-scroll ml-2 mr-4 bg-slate-200 mt-2 mb-2">
-              {parsedContent.image || "NO Image PARSED"}
+          {parsedContent && imagesIsOpen && (
+            <div className="w-full max-w-2xl h-full flex items-center justify-center animate-tab-content-fade-in bg-white rounded-lg p-4 shadow-inner">
+              {parsedContent.image && parsedContent.image.trim() !== "" ? (
+                <img
+                  src={
+                    parsedContent.image.startsWith("data:image")
+                      ? parsedContent.image
+                      : `data:image/png;base64,${parsedContent.image}`
+                  }
+                  alt="Parsed"
+                  className="max-h-72 max-w-full rounded shadow"
+                />
+              ) : (
+                <span className="text-gray-400 font-semibold text-lg text-center w-full">
+                  NO IMAGE PARSED
+                </span>
+              )}
             </div>
           )}
           {parsedContent && xlsxIsOpen && (
-            <div className="w-[650px]  rounded-md  border-dashed  border-black border-[1px] max-h-64  overflow-y-scroll ml-2 mr-4 bg-slate-200 mt-2 mb-2">
-              {/* {parsedContent.xlsx && (
-                <a
-                  href={`data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${parsedContent.xlsx}`}
-                  download={`${parsedContent.filename}.xlsx`}
-                >
-                  Download XLSX
-                </a>
-              )} */}
-              {parsedContent.xlsx || "NO xlsx PARSED"}
+            <div className="w-full max-w-2xl h-full flex flex-col items-center justify-center animate-tab-content-fade-in bg-white rounded-lg p-4 shadow-inner">
+              {parsedContent.xlsx && parsedContent.xlsx.trim() !== "" ? (
+                (() => {
+                  let workbook, sheetName, sheet, rows;
+                  let isBase64 = false;
+                  try {
+                    // Try to parse as base64
+                    const base64 = parsedContent.xlsx.includes(",")
+                      ? parsedContent.xlsx.split(",")[1]
+                      : parsedContent.xlsx;
+                    const binary = atob(base64);
+                    const bytes = new Uint8Array(binary.length);
+                    for (let i = 0; i < binary.length; i++)
+                      bytes[i] = binary.charCodeAt(i);
+                    workbook = XLSX.read(bytes, { type: "array" });
+                    sheetName = workbook.SheetNames[0];
+                    sheet = workbook.Sheets[sheetName];
+                    rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                    isBase64 = true;
+                  } catch (e) {
+                    // Not base64 or not a valid XLSX
+                  }
+                  if (isBase64 && rows && rows.length > 0) {
+                    return (
+                      <div className="w-full overflow-x-auto">
+                        <table className="min-w-full border border-slate-200 rounded-lg shadow bg-white">
+                          <tbody>
+                            {rows.map((row, i) => (
+                              <tr key={i} className="border-b last:border-b-0">
+                                {row.map((cell, j) => (
+                                  <td
+                                    key={j}
+                                    className="px-3 py-2 border-r last:border-r-0 text-slate-800 text-sm"
+                                  >
+                                    {cell !== undefined ? cell.toString() : ""}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        <button
+                          onClick={() => {
+                            // Download logic for XLSX
+                            const base64 = parsedContent.xlsx.includes(",")
+                              ? parsedContent.xlsx.split(",")[1]
+                              : parsedContent.xlsx;
+                            try {
+                              const binary = atob(base64);
+                              const ab = new ArrayBuffer(binary.length);
+                              const ia = new Uint8Array(ab);
+                              for (let i = 0; i < binary.length; i++)
+                                ia[i] = binary.charCodeAt(i);
+                              const blob = new Blob([ab], {
+                                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                              });
+                              const url = window.URL.createObjectURL(blob);
+                              const a = document.createElement("a");
+                              a.href = url;
+                              a.download = "result.xlsx";
+                              document.body.appendChild(a);
+                              a.click();
+                              setTimeout(() => {
+                                window.URL.revokeObjectURL(url);
+                                document.body.removeChild(a);
+                              }, 0);
+                            } catch (e) {
+                              alert(
+                                "Failed to download XLSX. Data may be corrupted."
+                              );
+                            }
+                          }}
+                          className="mt-4 bg-gradient-to-r from-blue-400 to-pink-400 text-white px-5 py-2 rounded-lg font-semibold shadow transition-all duration-200 hover:from-pink-500 hover:to-blue-500 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-300 flex items-center gap-2"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            className="w-5 h-5"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"
+                            />
+                          </svg>
+                          Download XLSX
+                        </button>
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div className="w-full flex flex-col items-center justify-center">
+                        <span className="text-gray-400 font-semibold text-lg text-center w-full mb-4">
+                          Preview not available. Please download the file.
+                        </span>
+                        <button
+                          onClick={() => {
+                            // Download fallback
+                            let data = parsedContent.xlsx;
+                            let filename = "result.xlsx";
+                            let type =
+                              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                            try {
+                              const base64 = data.includes(",")
+                                ? data.split(",")[1]
+                                : data;
+                              const binary = atob(base64);
+                              const ab = new ArrayBuffer(binary.length);
+                              const ia = new Uint8Array(ab);
+                              for (let i = 0; i < binary.length; i++)
+                                ia[i] = binary.charCodeAt(i);
+                              const blob = new Blob([ab], { type });
+                              const url = window.URL.createObjectURL(blob);
+                              const a = document.createElement("a");
+                              a.href = url;
+                              a.download = filename;
+                              document.body.appendChild(a);
+                              a.click();
+                              setTimeout(() => {
+                                window.URL.revokeObjectURL(url);
+                                document.body.removeChild(a);
+                              }, 0);
+                            } catch (e) {
+                              alert(
+                                "Failed to download XLSX. Data may be corrupted."
+                              );
+                            }
+                          }}
+                          className="bg-gradient-to-r from-blue-400 to-pink-400 text-white px-5 py-2 rounded-lg font-semibold shadow transition-all duration-200 hover:from-pink-500 hover:to-blue-500 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-300 flex items-center gap-2"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            className="w-5 h-5"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"
+                            />
+                          </svg>
+                          Download XLSX
+                        </button>
+                      </div>
+                    );
+                  }
+                })()
+              ) : (
+                <span className="text-gray-400 font-semibold text-lg text-center w-full">
+                  NO XLSX PARSED
+                </span>
+              )}
             </div>
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 };

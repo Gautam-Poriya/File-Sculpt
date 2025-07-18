@@ -14,32 +14,37 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="  border-b-slate-50 border-b-2 h-20">
-        <div className=" flex items-center  bg-white border-b-gray-900 h-full">
-          <div className="ml-8 justify-center items-centerflex  ">
+      <nav className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md shadow-lg animate-navbar-fade-in border-b border-slate-200 h-20 transition-all duration-300">
+        <div className="flex items-center h-full px-6">
+          <div className="ml-2 flex items-center">
             <button
               onClick={handleRedirect}
-              className="flex justify-center items-center gap-2 "
+              className="flex justify-center items-center gap-2 hover:scale-105 transition-transform duration-200"
             >
-              <img src="FileSculpt.svg" className="h-8 w-8 sm:h-6 sm:w-6" />
-              <span className="text-3xl  font-bold font-sans mb-2 ">
+              <img src="FileSculpt.svg" className="h-10 w-10 rounded-lg shadow-md" />
+              <span className="text-3xl font-bold font-sans mb-2 text-gray-800 tracking-tight drop-shadow-sm">
                 FileSculpt
               </span>
             </button>
           </div>
-
-          {/* <div className="ml-16 ">
+          <div className="ml-20 flex items-center">
             <CreateOrg />
           </div>
-          <div className="ml-16 ">
-            <CreateAndManageProject />
-          </div> */}
-          <div className="ml-[700px]  ">
-        
+          <div className="ml-auto">
             <Userprofile />
           </div>
         </div>
+        <style>{`
+          @keyframes navbarFadeIn {
+            0% { opacity: 0; transform: translateY(-30px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
+          .animate-navbar-fade-in {
+            animation: navbarFadeIn 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+          }
+        `}</style>
       </nav>
+      <div className="h-20" /> {/* Spacer to prevent content from being hidden behind fixed navbar */}
     </>
   );
 };
@@ -170,40 +175,33 @@ const Userprofile = () => {
   }
 
   return (
-    <div className="flex items-center space-x-4 ml-[90px]">
-      {/* User Name and Email */}
-      <div className="h-auto">
-        <div>
-          <span className="text-black font-bold">
-            {currentUser.displayName}
-          </span>
-        </div>
-        <div>
-          <span className="text-gray-700">{currentUser.email}</span>
-        </div>
-      </div>
+    <div className="flex items-center space-x-4">
+      <div className="flex items-center gap-3 px-4 py-2 bg-white/90 rounded-2xl shadow-md border border-slate-100 hover:shadow-xl transition-all duration-200 group">
       {/* Profile Picture */}
-      <div className="justify-center items-center mt-1">
-        <div className="">
           <img
             src={
               currentUser.photoURL ||
               "https://www.example.com/default-avatar.png"
-            } // Fallback image
+          }
             alt="User Avatar"
-            className="w-6 h-6 ml-2 rounded-full"
-          />
+          className="w-9 h-9 rounded-full border-2 border-blue-200 shadow-sm group-hover:scale-105 group-hover:border-blue-400 transition-transform duration-200"
+        />
+        {/* User Info */}
+        <div className="flex flex-col items-start justify-center">
+          <span className="text-gray-900 font-semibold text-base leading-tight group-hover:text-blue-700 transition-colors">
+            {currentUser.displayName}
+          </span>
+          <span className="text-gray-500 text-xs leading-tight group-hover:text-blue-500 transition-colors">
+            {currentUser.email}
+          </span>
         </div>
-
-        <div className="w-20">
           {/* Sign Out Button */}
           <button
             onClick={handleSignOut}
-            className=" text-red-600 text-xs -mt-2 rounded"
+          className="ml-4 px-3 py-1 bg-gradient-to-r from-pink-400 to-blue-400 text-white text-xs rounded-lg shadow hover:from-blue-500 hover:to-pink-500 hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
           >
             Sign Out
           </button>
-        </div>
       </div>
     </div>
   );

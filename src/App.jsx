@@ -10,7 +10,7 @@ import Home from "./Components/Home.jsx";
 import Parse from "./Components/Parse.jsx";
 import Settings from "./Components/Settings.jsx";
 import OragnizationMembers from "./Components/OragnizationMembers.jsx";
-import ApiKey from "./Components/ApiKey";
+// import ApiKey from "./Components/ApiKey";
 import SignIn from "./SignIn";
 import Signin from "./SigninTesting.jsx";
 import AuthProvider from "./AuthContext";
@@ -36,7 +36,7 @@ function App() {
             path="/settings/Organization/members"
             element={<OragnizationMembers />}
           />
-          <Route path="/Project/uuid/ApiKey" element={<ApiKey />} />
+          {/* <Route path="/Project/uuid/ApiKey" element={<ApiKey />} /> */}
           <Route path="/uuid/waitlist-form" element={<SignUpForWaitList />} />
         </Routes>
       </Router>
