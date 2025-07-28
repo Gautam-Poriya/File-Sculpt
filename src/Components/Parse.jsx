@@ -26,6 +26,42 @@ import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import rehypeHighlight from "rehype-highlight";
 import * as XLSX from "xlsx";
+import ReactDOMServer from "react-dom/server";
+import { Bar, Pie, Line } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement } from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement);
+
+const sampleBarData = {
+  labels: ['Red', 'Blue', 'Yellow'],
+  datasets: [
+    {
+      label: 'Votes',
+      data: [12, 19, 3],
+      backgroundColor: ['#3b82f6', '#6366f1', '#f59e42'],
+    },
+  ],
+};
+const samplePieData = {
+  labels: ['Red', 'Blue', 'Yellow'],
+  datasets: [
+    {
+      data: [10, 20, 30],
+      backgroundColor: ['#3b82f6', '#6366f1', '#f59e42'],
+    },
+  ],
+};
+const sampleLineData = {
+  labels: ['Jan', 'Feb', 'Mar'],
+  datasets: [
+    {
+      label: 'Sales',
+      data: [33, 53, 85],
+      borderColor: '#3b82f6',
+      backgroundColor: 'rgba(59,130,246,0.2)',
+    },
+  ],
+};
 // If not installed, run: npm install remark-math rehype-katex rehype-highlight katex
 
 const Parse = () => {
@@ -55,6 +91,7 @@ const ParseService = ({ collapsed }) => {
   const [jsonContent, setJsonContent] = useState(" ");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const {checkboxStates} =useAppContext();
   const navigate = useNavigate();
   useEffect(() => {
     if (loading) {
@@ -74,12 +111,12 @@ const ParseService = ({ collapsed }) => {
     setFile(uploadedfile);
     setStep(2);
   };
-
+ 
   // Handle close button in JobResult component
   const handleCloseJobResult = () => {
     setStep(1);
 
-  
+    // Go back to FileUpload component
   };
 
   const handleParsingOnClickButton = async () => {
@@ -92,7 +129,13 @@ const ParseService = ({ collapsed }) => {
 
       setStep("2");
 
-     
+      // Simulating a delay for processing
+      //  if(response!==NULL){
+      //   setStep("3");
+      //  }else{
+      //   alert("Plese Try Again ")
+      //  }
+
       setTimeout(() => {
         setStep("3");
       }, 10000);
@@ -109,10 +152,11 @@ const ParseService = ({ collapsed }) => {
     formData.append("userEmail", userData);
     formData.append("currentUser", currentUser);
     formData.append("token", token);
+    formData.append("textAndImageHandling",checkboxStates);
     console.log(formData);
     try {
       const response = await axios.post(
-        "http://localhost:5000",
+        "http://localhost:5000/parse-pdf",
         formData,
         {
           headers: {
@@ -220,7 +264,7 @@ const ParseService = ({ collapsed }) => {
                   </p>
                 </div> */}
 
-                  {/* checkbox goes here but not impleamented yet */}
+                  {/* checkbox goes here bu not impleamented yet */}
                   {/* <div className="bg-slate-400 h-48">
                    <input type="textarea" placeholder="The provided document is a manga comic book. Most pages do NOT have a title. It does not contain tables. Try to reconstruct the dialogue spoken in a cohesive way." className="overflow-y-scroll overflow-x-clip w-full h-28 mr-3 ml-3 "/>
                    </div> */}
@@ -484,6 +528,7 @@ const ParsedFileResult = ({
   const [imagesIsOpen, setImagesIsOpen] = useState(null);
   const [layoutIsOpen, setLayoutIsOpen] = useState(null);
   const [structuredIsOpen, setStructuredIsOpen] = useState(null);
+  const [showRawMarkdown, setShowRawMarkdown] = useState(false);
 
   const JsonDisplay = ({ jsonContent }) => {
     // Check if jsonContent is an object
@@ -736,64 +781,43 @@ const ParsedFileResult = ({
         {/* Tabs */}
         <div className="w-full flex flex-nowrap gap-2 justify-center items-center mb-4 overflow-x-auto scrollbar-hide transition-all duration-300">
           <button
-            className={
-              getTabButtonClass(markDownIsOpen) +
-              " w-28 h-11 text-center flex items-center justify-center"
-            }
+            className={getTabButtonClass(markDownIsOpen) + " flex-1 min-w-0 h-9 text-center flex items-center justify-center text-sm"}
             onClick={handleMarkDownClick}
           >
             MarkDown
           </button>
           <button
-            className={
-              getTabButtonClass(textIsOpen) +
-              " w-20 h-11 text-center flex items-center justify-center"
-            }
+            className={getTabButtonClass(textIsOpen) + " flex-1 min-w-0 h-9 text-center flex items-center justify-center text-sm"}
             onClick={handleTextClick}
           >
             Text
           </button>
           <button
-            className={
-              getTabButtonClass(jsonIsOpen) +
-              " w-20 h-11 text-center flex items-center justify-center"
-            }
+            className={getTabButtonClass(jsonIsOpen) + " flex-1 min-w-0 h-9 text-center flex items-center justify-center text-sm"}
             onClick={handleJsonClick}
           >
             JSON
           </button>
           <button
-            className={
-              getTabButtonClass(imagesIsOpen) +
-              " w-24 h-11 text-center flex items-center justify-center"
-            }
+            className={getTabButtonClass(imagesIsOpen) + " flex-1 min-w-0 h-9 text-center flex items-center justify-center text-sm"}
             onClick={handleImagesClick}
           >
             Images
           </button>
           <button
-            className={
-              getTabButtonClass(layoutIsOpen) +
-              " w-24 h-11 text-center flex items-center justify-center"
-            }
+            className={getTabButtonClass(layoutIsOpen) + " flex-1 min-w-0 h-9 text-center flex items-center justify-center text-sm"}
             onClick={handleLayOutClick}
           >
             Layout
           </button>
           <button
-            className={
-              getTabButtonClass(xlsxIsOpen) +
-              " w-20 h-11 text-center flex items-center justify-center"
-            }
+            className={getTabButtonClass(xlsxIsOpen) + " flex-1 min-w-0 h-9 text-center flex items-center justify-center text-sm"}
             onClick={handleXlsxClick}
           >
             XLSX
           </button>
           <button
-            className={
-              getTabButtonClass(structuredIsOpen) +
-              " w-32 h-11 text-center flex items-center justify-center"
-            }
+            className={getTabButtonClass(structuredIsOpen) + " flex-1 min-w-0 h-9 text-center flex items-center justify-center text-sm"}
             onClick={handleStructuredClick}
           >
             Structured
@@ -809,20 +833,97 @@ const ParsedFileResult = ({
           className="w-full min-h-[180px] max-h-[340px] flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-pink-50 rounded-xl border border-slate-200 shadow-inner p-4 overflow-y-auto animate-tab-content-fade-in"
         >
           {parsedContent && markDownIsOpen && (
-            <div className="w-full max-w-2xl h-full flex items-start justify-start text-gray-900 font-sans text-base animate-tab-content-fade-in overflow-auto bg-white rounded-lg p-4 shadow-inner prose prose-blue">
-              {parsedContent.markdown &&
-              parsedContent.markdown.trim() !== "" ? (
-                /[#*\-|`>\[\]_~]/.test(parsedContent.markdown) ? (
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm, remarkMath]}
-                    rehypePlugins={[rehypeKatex, rehypeHighlight]}
-                  >
-                    {parsedContent.markdown}
-                  </ReactMarkdown>
-                ) : (
-                  <pre className="whitespace-pre-wrap break-words text-slate-800 font-mono text-base leading-relaxed selection:bg-blue-100 selection:text-blue-900 w-full">
+            <div className="w-full h-full flex flex-col items-start justify-start animate-tab-content-fade-in overflow-auto bg-gradient-to-br from-white via-blue-50 to-pink-50 rounded-2xl p-8 shadow-2xl border border-blue-200">
+              <div className="w-full flex justify-end mb-2 gap-2">
+                <button
+                  onClick={() => {
+                    // Download rendered HTML
+                    const html = ReactDOMServer.renderToStaticMarkup(
+                      <div className="prose prose-blue bg-white/95 rounded-xl p-8 shadow-inner border border-slate-200">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm, remarkMath]}
+                          rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                          components={{
+                            table({node, ...props}) {
+                              return (
+                                <div className="overflow-x-auto w-full">
+                                  <table className="min-w-max" {...props} />
+                                </div>
+                              );
+                            }
+                          }}
+                        >
+                          {parsedContent.markdown}
+                        </ReactMarkdown>
+                      </div>
+                    );
+                    const blob = new Blob([html], { type: "text/html" });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "rendered-table.html";
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => {
+                      window.URL.revokeObjectURL(url);
+                      document.body.removeChild(a);
+                    }, 0);
+                  }}
+                  className="px-3 py-1 rounded bg-green-100 text-green-700 font-semibold hover:bg-green-200 transition text-sm"
+                >
+                  Download as HTML
+                </button>
+                <button
+                  onClick={() => setShowRawMarkdown((prev) => !prev)}
+                  className="px-3 py-1 rounded bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200 transition text-sm"
+                >
+                  {showRawMarkdown ? "Show Raw" : "Show Formatted"}
+                </button>
+              </div>
+              {parsedContent.markdown && parsedContent.markdown.trim() !== "" ? (
+                showRawMarkdown ? (
+                  <pre className="mx-auto max-w-5xl w-full min-w-full whitespace-pre break-words text-slate-800 font-mono text-base leading-relaxed selection:bg-blue-100 selection:text-blue-900 bg-white/95 rounded-xl p-8 shadow-inner border border-slate-200 overflow-x-auto custom-pre-scrollbar">
                     {parsedContent.markdown}
                   </pre>
+                ) : (
+                  <div className="w-full max-w-5xl mx-auto overflow-x-auto">
+                    <div className="prose prose-blue bg-white/95 rounded-xl p-8 shadow-inner border border-slate-200">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm, remarkMath]}
+                        rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                        components={{
+                          h1: ({node, ...props}) => <h1 className="font-bold text-2xl mt-6 mb-2 text-blue-800 border-b pb-1" {...props} />,
+                          h2: ({node, ...props}) => <h2 className="font-bold text-xl mt-5 mb-2 text-blue-700" {...props} />,
+                          h3: ({node, ...props}) => <h3 className="font-semibold text-lg mt-4 mb-1 text-blue-600" {...props} />,
+                          strong: ({node, ...props}) => <strong className="font-bold text-blue-900" {...props} />,
+                          ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-2" {...props} />,
+                          ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-2" {...props} />,
+                          li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                          p: ({node, ...props}) => <p className="mb-2" {...props} />,
+                          table: ({node, ...props}) => (
+                            <div className="overflow-x-auto w-full my-4">
+                              <table className="min-w-max border border-slate-300 bg-white shadow">
+                                {props.children}
+                              </table>
+                            </div>
+                          ),
+                          th: ({node, ...props}) => <th className="px-4 py-2 font-bold bg-blue-50 border border-slate-300" {...props} />,
+                          td: ({node, ...props}) => <td className="px-4 py-2 border border-slate-200" {...props} />,
+                          code({node, inline, className, children, ...props}) {
+                            return !inline ? (
+                              <pre className="bg-gray-900 text-white rounded p-4 overflow-x-auto my-2">
+                                <code className={className} {...props}>{children}</code>
+                              </pre>
+                            ) : (
+                              <code className="bg-gray-100 px-1 rounded" {...props}>{children}</code>
+                            );
+                          }
+                        }}
+                      >
+                        {parsedContent.markdown}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
                 )
               ) : (
                 <span className="text-gray-400 font-semibold text-lg text-center w-full">
@@ -832,39 +933,68 @@ const ParsedFileResult = ({
             </div>
           )}
           {parsedContent && textIsOpen && (
-            <div className="w-full max-w-2xl h-full overflow-auto bg-white rounded-lg p-6 shadow-inner animate-tab-content-fade-in">
+            <div className="w-full max-w-4xl h-full overflow-auto bg-white rounded-lg p-8 shadow-inner animate-tab-content-fade-in">
               {parsedContent.text && parsedContent.text.trim() !== "" ? (
-                (() => {
-                  const text = parsedContent.text;
-                  // If it's a single line or looks like code/log, use <pre>
-                  if (text.split("\n").length === 1 || /\t|\s{2,}/.test(text)) {
-                    return (
-                      <pre className="whitespace-pre-wrap break-words text-slate-800 font-mono text-base leading-relaxed selection:bg-blue-100 selection:text-blue-900">
-                        {text}
-                      </pre>
-                    );
-                  }
-                  // Otherwise, split into paragraphs
-                  return text.split(/\n\s*\n/).map((para, idx) => {
-                    // Highlight keywords and linkify URLs
-                    let html = para
-                      .replace(
-                        /(https?:\/\/[^\s]+)/g,
-                        '<a href="$1" class="text-blue-600 underline" target="_blank">$1</a>'
-                      )
-                      .replace(
-                        /\b(Error|Warning|Success)\b/gi,
-                        '<span class="font-bold px-1 rounded text-white bg-red-500">$1</span>'
-                      );
-                    return (
-                      <p
-                        key={idx}
-                        className="mb-4 text-slate-800 text-base leading-relaxed"
-                        dangerouslySetInnerHTML={{ __html: html }}
-                      />
-                    );
-                  });
-                })()
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm, remarkMath]}
+                  rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                  components={{
+                    h1: ({node, ...props}) => <h1 className="text-3xl font-normal mt-8 mb-4" {...props} />,
+                    h2: ({node, ...props}) => <h2 className="text-2xl font-normal mt-6 mb-3" {...props} />,
+                    h3: ({node, ...props}) => <h3 className="text-xl font-normal mt-4 mb-2" {...props} />,
+                    h4: ({node, ...props}) => <h4 className="text-lg font-normal mt-3 mb-1" {...props} />,
+                    p: ({node, ...props}) => {
+                      // Detect chart placeholder in paragraph
+                      const text = props.children && props.children[0] && typeof props.children[0] === 'string' ? props.children[0] : null;
+                      if (text && text.match(/^\[chart:(bar|pie|line)\]/i)) {
+                        const chartType = text.match(/^\[chart:(bar|pie|line)\]/i)[1];
+                        if (chartType === 'bar') {
+                          return (
+                            <div className="chart-container my-6 w-full h-64 bg-gray-100 flex items-center justify-center rounded">
+                              <Bar data={sampleBarData} />
+                            </div>
+                          );
+                        }
+                        if (chartType === 'pie') {
+                          return (
+                            <div className="chart-container my-6 w-full h-64 bg-gray-100 flex items-center justify-center rounded">
+                              <Pie data={samplePieData} />
+                            </div>
+                          );
+                        }
+                        if (chartType === 'line') {
+                          return (
+                            <div className="chart-container my-6 w-full h-64 bg-gray-100 flex items-center justify-center rounded">
+                              <Line data={sampleLineData} />
+                            </div>
+                          );
+                        }
+                      }
+                      return <p className="mb-3 text-base text-gray-800" {...props} />;
+                    },
+                    a: ({node, ...props}) => <a className="break-all" style={{ color: 'inherit', textDecoration: 'none' }} target="_blank" rel="noopener noreferrer" {...props} />,
+                    table: ({node, ...props}) => (
+                      <div className="overflow-x-auto my-4">
+                        <table className="min-w-max w-full border border-gray-300 bg-white shadow">{props.children}</table>
+                      </div>
+                    ),
+                    tr: ({node, ...props}) => <tr className="even:bg-gray-50" {...props} />,
+                    th: ({node, ...props}) => <th className="px-4 py-2 font-bold bg-blue-50 border border-gray-300" {...props} />,
+                    td: ({node, ...props}) => <td className="px-4 py-2 border border-gray-200" {...props} />,
+                    ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-3" {...props} />,
+                    ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-3" {...props} />,
+                    li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                    pre: ({node, ...props}) => <pre className="bg-gray-900 text-white rounded p-4 overflow-x-auto my-4"><code {...props} /></pre>,
+                    code: ({node, inline, className, children, ...props}) =>
+                      !inline ? (
+                        <code className={className} {...props}>{children}</code>
+                      ) : (
+                        <code className="bg-gray-100 px-1 rounded" {...props}>{children}</code>
+                      ),
+                  }}
+                >
+                  {parsedContent.text}
+                </ReactMarkdown>
               ) : (
                 <span className="text-gray-400 font-semibold text-lg text-center w-full">
                   NO TEXT PARSED
@@ -1088,3 +1218,16 @@ const ParsedFileResult = ({
     </div>
   );
 };
+
+// Add custom scrollbar styling for the pre block
+<style>{`
+  .custom-pre-scrollbar::-webkit-scrollbar {
+    height: 8px;
+    background: #e0e7ef;
+    border-radius: 8px;
+  }
+  .custom-pre-scrollbar::-webkit-scrollbar-thumb {
+    background: #a5b4fc;
+    border-radius: 8px;
+  }
+`}</style>
