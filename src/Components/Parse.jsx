@@ -277,7 +277,7 @@ const ParseService = ({ collapsed }) => {
                   <div>
                     <PageFormatting />
                   </div>
-                  <div>
+                  {/* <div>
                     <WebHook />
                   </div>
                   <div>
@@ -285,7 +285,7 @@ const ParseService = ({ collapsed }) => {
                   </div>
                   <div>
                     <Advanced />
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* <div><ParsingButton /></div>
@@ -345,6 +345,7 @@ const ParseService = ({ collapsed }) => {
                 <FileUpLoading message={message} />
               ) : step == 3 ? (
                 <ParsedFileResult
+                   selectedFile={selectedFile}
                   onClose={handleCloseJobResult}
                   parsedContent={parsedContent}
                   setParsedContent={setParsedContent}
@@ -520,6 +521,7 @@ const ParsedFileResult = ({
   setParsedContent,
   job_id,
   jsonContent,
+  selectedFile
 }) => {
   const [markDownIsOpen, setMarkDownIsOpen] = useState(null);
   const [textIsOpen, setTextIsOpen] = useState(null);
@@ -529,6 +531,7 @@ const ParsedFileResult = ({
   const [layoutIsOpen, setLayoutIsOpen] = useState(null);
   const [structuredIsOpen, setStructuredIsOpen] = useState(null);
   const [showRawMarkdown, setShowRawMarkdown] = useState(false);
+  
 
   const JsonDisplay = ({ jsonContent }) => {
     // Check if jsonContent is an object
@@ -683,7 +686,7 @@ const ParsedFileResult = ({
               onClick={() => {
                 // Download logic based on active tab
                 let data = "";
-                let filename = "result";
+                let filename = selectedFile.name;
                 let type = "text/plain";
                 if (markDownIsOpen && parsedContent?.markdown) {
                   data = parsedContent.markdown;

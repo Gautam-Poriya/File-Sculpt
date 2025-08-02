@@ -18,7 +18,7 @@ import PrivateRoute from "./PrivateRoute";
 import SignUpForWaitList from "./Components/SignUpForWaitList.jsx";
 import ParsedResult from "./Components/ParsedResult.jsx";
 import History from "./Components/History.jsx";
-
+import ChatWithDoc from "./Components/ChatWithDoc/ChatWithDoc.jsx";
 function App() {
   return (
     <AuthProvider>
@@ -38,6 +38,7 @@ function App() {
           />
           {/* <Route path="/Project/uuid/ApiKey" element={<ApiKey />} /> */}
           <Route path="/uuid/waitlist-form" element={<SignUpForWaitList />} />
+          <Route path="/Chat-With-Document" element={<ChatWithDoc/>}/>
         </Routes>
       </Router>
     </AuthProvider>
