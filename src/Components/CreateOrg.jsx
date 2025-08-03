@@ -107,7 +107,7 @@ const CreateOrg = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/organizations",
+        "https://file-sculpt-backend.onrender.com/api/organizations",
         {
           // userId: user.id, // Replace with the actual user ID
           token: token,

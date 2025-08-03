@@ -361,7 +361,7 @@ function JobHistory({ collapsed }) {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/history", {
+        const response = await axios.get("https://file-sculpt-backend.onrender.com/history", {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -397,7 +397,7 @@ function JobHistory({ collapsed }) {
     setPopupLoading(true);
     setPopupFileInfo(null);
     try {
-      const response = await axios.get("http://localhost:5000/file-info", {
+      const response = await axios.get("https://file-sculpt-backend.onrender.com/file-info", {
         params: { jobId: job.jobId },
         headers: {
           Authorization: `Bearer ${token}`,

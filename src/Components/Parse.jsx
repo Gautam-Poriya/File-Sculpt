@@ -156,7 +156,7 @@ const ParseService = ({ collapsed }) => {
     console.log(formData);
     try {
       const response = await axios.post(
-        "http://localhost:5000/parse-pdf",
+        "https://file-sculpt-backend.onrender.com/parse-pdf",
         formData,
         {
           headers: {

@@ -26,7 +26,7 @@ function SettingPageFunctionalities({ collapsed }) {
   useEffect(() => {
     const fetchOrganizations = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/organizations", {
+        const response = await axios.get("https://file-sculpt-backend.onrender.com/api/organizations", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

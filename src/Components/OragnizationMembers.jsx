@@ -35,7 +35,7 @@ const Members = ({ collapsed }) => {
             <button className="w-40 h-11 text-center flex items-center justify-center bg-gradient-to-r from-pink-400 to-blue-400 text-white font-semibold rounded-lg shadow transition-all duration-200 hover:from-blue-500 hover:to-pink-500 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-300" disabled>Members</button>
           </div>
         </div>
-        <div className="w-full h-full min-h-40 min-h-0 min-w-0 bg-gradient-to-br from-blue-50 to-pink-50 border border-slate-200 rounded-xl shadow-inner p-4 sm:p-6 flex flex-col items-center justify-center animate-members-card-fade-in">
+        <div className="w-full h-full min-h-40  min-w-0 bg-gradient-to-br from-blue-50 to-pink-50 border border-slate-200 rounded-xl shadow-inner p-4 sm:p-6 flex flex-col items-center justify-center animate-members-card-fade-in">
           <div className="w-full h-full flex flex-col flex-grow min-h-0">
             <MemberFunctionalities />
           </div>
