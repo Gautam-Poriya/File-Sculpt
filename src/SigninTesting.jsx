@@ -16,7 +16,8 @@ const Signin = () => {
 
   const signInWithGoogle = async () => {
     try {
-      const result = await signInWithPopup(auth, provider);
+     // const result = await signInWithPopup(auth, provider);
+      const result =await signInWithRedirect(auth, provider);
       const idToken = await result.user.getIdToken();
       const response = await fetch("https://file-sculpt-backend.onrender.com/signin", {
         method: "POST",
